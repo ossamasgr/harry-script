@@ -5,7 +5,10 @@ secret='arn:aws:secretsmanager:us-east-1:273940060047:secret:testcluster-9PrWHu'
 region='us-east-1'
 query='select catid,catname from category'
 cluster_identifier='redshift-cluster-1'
-
+sftp_host='192.168.1.13'
+sftp_user='tester'
+sftp_password='password'
+date=$(date +%m-%d-%Y)
 # Execute Redshift SQL statement and get statement ID
 statementId=$(aws redshift-data execute-statement --region $region --secret $secret --cluster-identifier $cluster_identifier --database $Database --sql "$query"  --query 'Id' --output text)
 
@@ -19,7 +22,6 @@ while true; do
         echo "Statement execution failed"
         exit 1
     fi
-    echo "Statement in progress"
     sleep 1
 done
 
@@ -53,9 +55,10 @@ do
   telematics_url="http://telematics-alb.mentor.internal/api/v4/drivers/${trip_id}/trips/${driver_id}?facet=all"
   #curl $telematics_url
   touch $trip_id.$driver_id
-  zip -u $trip_id-$driver_id.zip $trip_id.$driver_id > /dev/null 2>&1
+  zip -u $trip_id-$driver_id-$date.zip $trip_id.$driver_id > /dev/null 2>&1
+  sshpass -p ${sftp_password} scp -P 2222 -s ${trip_id}-${driver_id}-${date}.zip  ${sftp_user}@${sftp_host}:${trip_id}-${driver_id}-${date}.zip
   rm $trip_id.$driver_id
-  rm $trip_id-$driver_id.zip
+  rm $trip_id-$driver_id-$date.zip
   count=$(( count + 1 ))
   progress_bar $count $total
 
