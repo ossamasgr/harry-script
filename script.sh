@@ -19,6 +19,7 @@ while true; do
         echo "Statement execution failed"
         exit 1
     fi
+    echo "Statement in progress"
     sleep 1
 done
 
